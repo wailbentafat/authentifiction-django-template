@@ -21,17 +21,23 @@ class SignUpForm(UserCreationForm):
                 self.error_messages['password_mismatch'],
                 code='password_mismatch',
             )
+        else:
+            return True    
     def user_exists(self):
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
             raise forms.ValidationError('Username already exists.')
-       
+        else:
+            return True
     def email_exists(self):
         email=self.cleaned_data.get('email')
-        number=random.randint(1000,9999)
-        self.code=number
-        my='wailbentafat@gmail.com'
-        subject=_('verification code')
-        message=_(f'your verification code is {number}')
-        send_mail(subject,message,my,[email])
-        return self.code
+        exis_email=User.objects.filter(email=email).exists()
+        if exis_email:
+            raise forms.ValidationError('Email already exists.')
+        else:
+            return True
+class otp(forms.Form):
+    code = forms.CharField(label='Enter OTP')
+    
+    
+    
