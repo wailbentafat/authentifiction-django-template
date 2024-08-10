@@ -30,7 +30,7 @@ def signup(request):
             print(otp_num)
             request.session['otp_num'] = otp_num
             UserProfile.objects.create(user=user,otp_code=otp_num,otp_created_at=timezone.now())
-            #post_save.send(sender=UserProfile, instance=user, created=True)
+            post_save.send(sender=UserProfile, instance=UserProfile.objects.get(user=user), created=True)
             
             print('user_data',user)
             return redirect('otp')  
