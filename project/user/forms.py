@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from django.core.mail import send_mail
 import random
+import requests
 class SignUpForm(UserCreationForm):
     username = forms.CharField(label='Username', help_text=_('Required. 150 characters or fewer. Letters, digits and @/./+/-/_ only.'))
     email = forms.EmailField(label='Email Address', help_text='Required. Inform a valid email address.')
@@ -13,29 +14,45 @@ class SignUpForm(UserCreationForm):
     class Meta:
         model = User
         fields = ('username', 'email', 'password1', 'password2', )
-    def check_passwords(self):
+        
+    def clean_password2(self):
+        """
+        Validate that the two password fields match.
+        """
         password1 = self.cleaned_data.get("password1")
         password2 = self.cleaned_data.get("password2")
         if password1 and password2 and password1 != password2:
-            raise ValidationError(
-                self.error_messages['password_mismatch'],
-                code='password_mismatch',
-            )
-        else:
-            return True    
-    def user_exists(self):
+            raise ValidationError('Passwords do not match.')
+        return password2
+
+    def clean_username(self):
+        """
+        Validate that the username does not already exist in the database.
+        """
         username = self.cleaned_data.get('username')
         if User.objects.filter(username=username).exists():
-            raise forms.ValidationError('Username already exists.')
-        else:
-            return True
-    def email_exists(self):
-        email=self.cleaned_data.get('email')
-        exis_email=User.objects.filter(email=email).exists()
-        if exis_email:
-            raise forms.ValidationError('Email already exists.')
-        else:
-            return True
+            raise ValidationError('Username already exists.')
+        return username
+
+    def clean_email(self):
+        """
+        Validate that the email does not already exist in the database and is valid.
+        """
+        email = self.cleaned_data.get('email')
+        if User.objects.filter(email=email).exists():
+            raise ValidationError('Email already exists.')
+
+        # Additional email validation
+        api_key = '5f2b341945492ab36601fad393d509054d668604'  # Replace with your Hunter.io API key
+        url = f'https://api.hunter.io/v2/email-verifier?email={email}&api_key={api_key}'
+        response = requests.get(url)
+        result = response.json()
+        print(result)
+        verification_status = result.get('data', {}).get('status', 'unknown')
+        if verification_status != 'valid':
+            raise ValidationError('Invalid email address.')
+        
+        return email
 class otp(forms.Form):
     code = forms.CharField(label='Enter OTP')
     

@@ -42,6 +42,10 @@
                 <button type="submit">Submit</button>
             </form>
         </div>
+        <h2>Or sign up with:</h2>
+        {% load socialaccount %}
+        {% provider_login_url 'google' as google_signup_url %}
+        <a href="{{ google_signup_url }}">Sign Up with Google</a>
     </div>
 </body>
 </html>

@@ -1,1 +1,6 @@
-./db.
+
+# Ignore SQLite database
+db.sqlite
+
+# Ignore virtual environment directory
+venv/
